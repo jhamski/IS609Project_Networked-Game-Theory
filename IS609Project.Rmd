@@ -1,0 +1,17 @@
+---
+title: "IS609 - Networked Game Theory - Final Project"
+author: "J. Hamski, S. Hong, H. Berk"
+date: "April 9, 2016"
+output: html_document
+---
+
+```{r}
+library(igraph)
+```
+
+
+
+```{r}
+
+```
+
