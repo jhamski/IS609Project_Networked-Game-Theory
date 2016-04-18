@@ -12,6 +12,7 @@ library(igraph)
 
 
 ```{r}
-
+g <- make_empty_graph() + vertices(c("a", "b"))
+g <- g + path("a", "b")
 ```
 
