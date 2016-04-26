@@ -9,10 +9,17 @@ output: html_document
 library(igraph)
 ```
 
-
+Iterated Prisoner's Dillema on a Graph.
 
 ```{r}
-g <- make_empty_graph() + vertices(c("a", "b"))
-g <- g + path("a", "b")
+E <- matrix(c(1,1,2,2,2,2,1,1),4,2)
+g <- graph.edgelist(E, directed = TRUE)
+E(g)
+```
+
+```{r}
+for(i in 1:4){
+  print(E(g)[i])
+}
 ```
 
