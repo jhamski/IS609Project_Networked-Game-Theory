@@ -14,11 +14,14 @@ require(ggplot2) # for plotting
 
 ```{r}
 # size of the lattice
-sidelength<-100
+sidelength<-2
 # creating an empty data.frame to store data
 stat<-data.frame()
 # creating a lattice network using the igraph package
-l<-make_tree(n=sidelength, children=2)
+#l<-make_tree(n=sidelength, children=2)
+
+l<-graph.full(2)
+
 # now every individual chooses a strategy at random
 V(l)$weapon<-sample(c(1,2,2.9,3), size=length(V(l)), replace=T)
 # for a nicer visualisation lets colour the different options

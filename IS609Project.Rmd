@@ -7,19 +7,37 @@ output: html_document
 
 ```{r}
 library(igraph)
+library(ggplot2)
 ```
 
-Iterated Prisoner's Dillema on a Graph.
+Iterated Prisoner's Dilemma on a Graph.
+
+The classic two person Prisoner's Dilemma. 
 
 ```{r}
-E <- matrix(c(1,1,2,2,2,2,1,1),4,2)
-g <- graph.edgelist(E, directed = TRUE)
-E(g)
+nodes <- 5
+g.1 <- graph.full(nodes)
+
+#randomply select strategy
+# 1 = defect, 2 = cooperate
+V(g.1)$strategy<-sample(c(1,2), size=length(V(g.1)), replace=T)
+
+V(g.1)[strategy==1]$color<-'red' # defect
+V(g.1)[strategy==2]$color<-'blue' # cooperate
 ```
 
 ```{r}
-for(i in 1:4){
-  print(E(g)[i])
+plot(g.1)
+```
+
+```{r}
+iterations <- 25
+
+for(i in 1:iterations){
+  start.node <- as.numeric(sample(V(g.1), 1))
+  opponents <- neighbors(g.1, start.node, mode="all")
+  
 }
+
 ```
 
