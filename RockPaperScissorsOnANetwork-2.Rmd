@@ -5,20 +5,6 @@ date: "April 20, 2016"
 output: html_document
 ---
 
-
-Based on: 
-https://marcosmolla.wordpress.com/2015/07/16/an-introduction-to-agent-based-modelling-in-r/
-
-# size of the lattice
-sidelength<img class="alignnone wp-image-594 size-full" src="https://marcosmolla.files.wordpress.com/2015/07/abm_3-1.png" alt="ABM_3-1" width="672" height="480" />
- 
-<a href="https://marcosmolla.files.wordpress.com/2015/07/abm_3-2.png"><img class="alignnone wp-image-595 size-full" src="https://marcosmolla.files.wordpress.com/2015/07/abm_3-2.png" alt="ABM_3-2" width="672" height="480" /></a>
-
-What we observe are interesting dynamics between the three strategies. For the limited number of rounds that we let the model run all strategies coexist. However, sometimes one strategy disappears which will lead to the win of the strategy that loses against this one. For example, if paper disappears, rock should win on a long run. You can now experiment what would happen if you have a smaller or bigger network, or even a different network type. The ```igraph``` package offers many possibilities here.
- 
-### And what is with Spock?
-The model we created so gar can be used to investigate for example epidemic dynamics. How do for instance information, rumors, and ideas, spread through a network. When we think of strategies spreading through a network we might want to add another strategy and see how a four-strategies-game differs from a three-strategies-game. Let us add Spock from the __Rock, Paper, Scissors, Lizard, Spock__ (see for example [here](http://www.samkass.com/theories/RPSSL.html))that you might have heard off from [The Big Bang Theory](https://www.google.it/url?sa=i&rct=j&q=&esrc=s&source=images&cd=&ved=0CAMQjxxqFQoTCKy_hIfd4cYCFcjtFAodxhAAvA&url=http%3A%2F%2Fwww.fanpop.com%2Fclubs%2Fthe-big-bang-theory%2Fimages%2F15090520%2Ftitle%2Frock-paper-scissors-lizard-spock-fanart&ei=7rmoVenrNM2f7gaU0I6QBQ&bvm=bv.98197061,d.ZGU&psig=AFQjCNHLCUOTpBDCfNDHRBHWLmg-4Wlipg&ust=1437207412361054&cad=rja).
- 
 ```{r, warning=FALSE, message=FALSE}
 require(igraph) # for networks
 require(reshape) # to change the resulted data in a format ggplot2 can use
@@ -28,7 +14,7 @@ require(ggplot2) # for plotting
 
 ```{r}
 # size of the lattice
-sidelength<-10
+sidelength<-100
 # creating an empty data.frame to store data
 stat<-data.frame()
 # creating a lattice network using the igraph package
@@ -40,8 +26,9 @@ V(l)[weapon==1]$color<-'blue' # Paper
 V(l)[weapon==2]$color<-'yellow' # Scissors
 V(l)[weapon==3]$color<-'green' # Rock
 V(l)[weapon==2.9]$color<-'purple' # Spock
-# and this is what it looks like:
-plot(l, layout=as.matrix(expand.grid(1:sidelength, 1:sidelength)), vertex.label=NA)
+
+
+plot(l)
 ```
 
 ```{r}
