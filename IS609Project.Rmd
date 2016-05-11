@@ -20,24 +20,34 @@ g.1 <- graph.full(nodes)
 
 #randomply select strategy
 # 1 = defect, 2 = cooperate
-V(g.1)$strategy<-sample(c(1,2), size=length(V(g.1)), replace=T)
+V(g.1)$strategy <- sample(c(1,2), size = length(V(g.1)), replace = T)
 
-V(g.1)[strategy==1]$color<-'red' # defect
-V(g.1)[strategy==2]$color<-'blue' # cooperate
+V(g.1)[strategy == 1]$color <- 'red' # defect
+V(g.1)[strategy == 2]$color <- 'blue' # cooperate
 ```
 
 ```{r}
 plot(g.1)
 ```
 
+Actually iterate through each node and figure out what the PD result is. Make sure all results average to the same thing. Then, re-do it for a different network, and different strategies. 
+
 ```{r}
+
 iterations <- 25
 
 for(i in 1:iterations){
   start.node <- as.numeric(sample(V(g.1), 1))
+  opponents.cnt <- neighborhood.size(g.1, 1, start.node)
+  
   opponents <- neighbors(g.1, start.node, mode="all")
+  
+  #defectors <- V(g.1)[strategy == 1]
+  
   
 }
 
 ```
+
+
 
