@@ -15,8 +15,9 @@ Iterated Prisoner's Dilemma on a Graph.
 The classic two person Prisoner's Dilemma. 
 
 ```{r}
-nodes <- 5
-g.1 <- graph.full(nodes)
+nodes <- 20
+
+g.1 <- degree.sequence.game(rep(2,nodes), method =  "vl")
 
 #randomply select strategy
 # 1 = defect, 2 = cooperate
