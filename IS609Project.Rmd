@@ -15,9 +15,9 @@ Iterated Prisoner's Dilemma on a Graph.
 The classic two person Prisoner's Dilemma. 
 
 ```{r}
-nodes <- 20
-
-g.1 <- degree.sequence.game(rep(2,nodes), method =  "vl")
+nodes <- 4
+degree <- 2
+g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
 
 #randomply select strategy
 # 1 = defect, 2 = cooperate
@@ -31,24 +31,60 @@ V(g.1)[strategy == 2]$color <- 'blue' # cooperate
 plot(g.1)
 ```
 
-Actually iterate through each node and figure out what the PD result is. Make sure all results average to the same thing. Then, re-do it for a different network, and different strategies. 
+Need to re-write this - it doesn't take into account the player's strategy, only the opponents!
+```{r}
+network.evaluation <- function(g){
+  network.results <- NULL
+  
+  for(i in 1:nodes){
+    
+    opponents <- neighbors(g, i, mode="all")
+    opponent.results <- NULL
+    
+    #need to incorporate players strategy -- V(g)[j]$strategy in an if/then statement?
+    for(j in 1:length(opponents)){
+      opponent.results <- c(opponent.results, opponents[j]$strategy)
+    }
+    # rbind isn't going to work when nodes have different number of edges
+    network.results <- rbind(network.results, opponent.results)
+  }
+  return(network.results)
+}
+```
 
 ```{r}
-
-iterations <- 25
-
-for(i in 1:iterations){
-  start.node <- as.numeric(sample(V(g.1), 1))
-  opponents.cnt <- neighborhood.size(g.1, 1, start.node)
-  
-  opponents <- neighbors(g.1, start.node, mode="all")
-  
-  #defectors <- V(g.1)[strategy == 1]
-  
-  
-}
-
+PD.results.opponents <- network.evaluation(g.1)
+row.names(PD.results.opponents) <- 1:4
 ```
+
+```{r}
+PD.results <- rowSums(PD.results.opponents)
+```
+
+```{r}
+for(i in 1:nodes){
+  V(g.1)[i]$result <- PD.results[i]
+}
+```
+
+```{r}
+V(g.1)[result == 1]$color <- 'green' # defect
+V(g.1)[result == 2]$color <- 'purple' # cooperate
+```
+
+
+```{r}
+plot(g.1)
+```
+
+```{r}
+plot(V(g.1)$strategy)
+```
+
+```{r}
+plot(V(g.1)$result)
+```
+
 
 
 
