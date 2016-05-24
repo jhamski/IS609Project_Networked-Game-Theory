@@ -15,7 +15,7 @@ Iterated Prisoner's Dilemma on a Graph.
 The classic two person Prisoner's Dilemma. 
 
 ```{r}
-nodes <- 4
+nodes <- 20
 degree <- 2
 g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
 
@@ -31,6 +31,7 @@ V(g.1)[strategy == 2]$color <- 'blue' # cooperate
 plot(g.1)
 ```
 
+
 Need to re-write this - it doesn't take into account the player's strategy, only the opponents!
 ```{r}
 network.evaluation <- function(g){
@@ -41,7 +42,6 @@ network.evaluation <- function(g){
     opponents <- neighbors(g, i, mode="all")
     opponent.results <- NULL
     
-    #need to incorporate players strategy -- V(g)[j]$strategy in an if/then statement?
     for(j in 1:length(opponents)){
       opponent.results <- c(opponent.results, opponents[j]$strategy)
     }
@@ -52,20 +52,53 @@ network.evaluation <- function(g){
 }
 ```
 
-```{r}
-PD.results.opponents <- network.evaluation(g.1)
-row.names(PD.results.opponents) <- 1:4
-```
 
 ```{r}
-PD.results <- rowSums(PD.results.opponents)
-```
-
-```{r}
-for(i in 1:nodes){
-  V(g.1)[i]$result <- PD.results[i]
+game.evaluation <- function(results, nodes, g){
+  row.names(results) <- 1:nodes
+  results <- cbind(results, V(g)$strategy)
+  
+  sentence.list <- NULL
+  
+  for(i in 1:length(PD.results[,1])){
+    if(results[i,1] == 1){ #row defects
+        opponent.sum <- sum(results[i,-1])
+        if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
+        if(opponent.sum == 3){sentence.list = c(sentence.list, 6)}
+        if(opponent.sum == 4){sentence.list = c(sentence.list, 12)}
+    }
+    else{
+        opponent.sum <- sum(results[i,-1])
+        if(opponent.sum == 2){sentence.list = c(sentence.list, 1)}
+        if(opponent.sum == 3){sentence.list = c(sentence.list, 4)}
+        if(opponent.sum == 4){sentence.list = c(sentence.list, 8)}
+    }
+  }
+  return(sentence.list)
 }
 ```
+
+
+```{r}
+r <- network.evaluation(g.1)
+r.list <- game.evaluation(r, nodes, g.1)
+```
+
+
+```{r}
+results.graph <- function(results.list, nodes, g){
+  for(i in 1:nodes){
+    V(g)[i]$result <- results.list[i]
+  }
+  return(g)
+}
+```
+
+```{r}
+g.results <- results.graph(r.list, nodes, g.1)
+```
+
+
 
 ```{r}
 V(g.1)[result == 1]$color <- 'green' # defect
@@ -87,4 +120,30 @@ plot(V(g.1)$result)
 
 
 
+
+```{r}
+PD.results.opponents <- network.evaluation(g.1)
+row.names(PD.results.opponents) <- 1:4
+PD.results <- cbind(V(g.1)$strategy, PD.results.opponents)
+colnames(PD.results)[1] <- "Row.Strategy"  
+
+sentence.list <- NULL
+
+for(i in 1:length(PD.results[,1])){
+    if(PD.results[i,1] == 1){ #row defects
+        opponent.sum <- sum(PD.results[i,-1])
+        if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
+        if(opponent.sum == 3){sentence.list = c(sentence.list, 6)}
+        if(opponent.sum == 4){sentence.list = c(sentence.list, 12)}
+    }
+    else{
+        opponent.sum <- sum(PD.results[i,-1])
+        if(opponent.sum == 2){sentence.list = c(sentence.list, 1)}
+        if(opponent.sum == 3){sentence.list = c(sentence.list, 4)}
+        if(opponent.sum == 4){sentence.list = c(sentence.list, 8)}
+    }
+  }
+
+
+```
 
