@@ -5,17 +5,18 @@ date: "April 9, 2016"
 output: html_document
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(igraph)
 library(ggplot2)
+library(knitr)
 ```
 
 Iterated Prisoner's Dilemma on a Graph.
 
-The classic two person Prisoner's Dilemma. 
+In the classic two person Prisoner's Dilemma . 
 
 ```{r}
-nodes <- 20
+nodes <- 15
 degree <- 2
 g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
 
@@ -60,7 +61,7 @@ game.evaluation <- function(results, nodes, g){
   
   sentence.list <- NULL
   
-  for(i in 1:length(PD.results[,1])){
+  for(i in 1:length(results[,1])){
     if(results[i,1] == 1){ #row defects
         opponent.sum <- sum(results[i,-1])
         if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
@@ -96,54 +97,26 @@ results.graph <- function(results.list, nodes, g){
 
 ```{r}
 g.results <- results.graph(r.list, nodes, g.1)
+
+results <- cbind(1:nodes, V(g.results)$result)
+colnames(results) <-c("Node", "Years Sentenced")
+kable(results)
 ```
 
 
 
 ```{r}
-V(g.1)[result == 1]$color <- 'green' # defect
-V(g.1)[result == 2]$color <- 'purple' # cooperate
+V(g.results)[result == 0]$color <- '#00B2E5' 
+V(g.results)[result == 1]$color <- '#2696B7' 
+V(g.results)[result == 4]$color <- '#4C7B89' 
+V(g.results)[result == 6]$color <- '#72605B' 
+V(g.results)[result == 8]$color <- '#98452D' 
+V(g.results)[result == 12]$color <- '#BF2A00' 
 ```
 
 
 ```{r}
-plot(g.1)
+plot(g.results)
 ```
 
-```{r}
-plot(V(g.1)$strategy)
-```
-
-```{r}
-plot(V(g.1)$result)
-```
-
-
-
-
-```{r}
-PD.results.opponents <- network.evaluation(g.1)
-row.names(PD.results.opponents) <- 1:4
-PD.results <- cbind(V(g.1)$strategy, PD.results.opponents)
-colnames(PD.results)[1] <- "Row.Strategy"  
-
-sentence.list <- NULL
-
-for(i in 1:length(PD.results[,1])){
-    if(PD.results[i,1] == 1){ #row defects
-        opponent.sum <- sum(PD.results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 6)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 12)}
-    }
-    else{
-        opponent.sum <- sum(PD.results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 1)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 4)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 8)}
-    }
-  }
-
-
-```
 
