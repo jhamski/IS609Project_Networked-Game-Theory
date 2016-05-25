@@ -1,24 +1,26 @@
----
-title: "IS609 - Networked Game Theory - Final Project"
-author: "J. Hamski, S. Hong, H. Berk"
-date: "April 9, 2016"
-output: html_document
----
+Networked Game Theory
+========================================================
+author: J. Hamski
+date: May 25, 2016
+autosize: true
 
-```{r, message=FALSE, warning=FALSE}
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 library(igraph)
 library(ggplot2)
 library(knitr)
 ```
 
-Iterated Prisoner's Dilemma on a Graph.
 
-In the classic two person Prisoner's Dilemma . 
+Prisoner's Dilemma
+========================================================
 
-```{r}
-nodes <- 16
-degree <- 2
-g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
+```{r, echo=FALSE}
+set.seed(141)
+```
+
+```{r, echo=FALSE}
+g.1 <- graph_from_literal(a---b)
 
 #randomply select strategy
 # 1 = defect, 2 = cooperate
@@ -28,12 +30,47 @@ V(g.1)[strategy == 1]$color <- 'red' # defect
 V(g.1)[strategy == 2]$color <- 'blue' # cooperate
 ```
 
-```{r}
+
+
+```{r, echo=FALSE}
 plot(g.1)
 ```
 
 
+Setup Random Graph
+========================================================
+
+```{r, echo=FALSE}
+set.seed(1412)
+```
+
+
 ```{r}
+nodes <- 20
+degree <- 2
+g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
+```
+
+```{r, echo=FALSE}
+#randomply select strategy
+# 1 = defect, 2 = cooperate
+V(g.1)$strategy <- sample(c(1,2), size = length(V(g.1)), replace = T)
+
+V(g.1)[strategy == 1]$color <- 'red' # defect
+V(g.1)[strategy == 2]$color <- 'blue' # cooperate
+```
+
+
+Graph with Strategies
+========================================================
+
+```{r, echo=FALSE}
+plot(g.1)
+```
+Evaluate Network - Find strategy of each opponent
+========================================================
+
+```{r, echo=F}
 max.degree <- function(g){
   
   degree.list <- NULL
@@ -50,14 +87,12 @@ max.degree <- function(g){
 ```{r}
 network.evaluation <- function(g, nodes){
   network.results <- NULL
-  
   max.degree <- max.degree(g)
   
   for(i in 1:nodes){
-    
     opponents <- neighbors(g, i, mode="all")
     opponent.results <- array(NA, max.degree)
-    
+  
     for(j in 1:length(opponents)){
       opponent.results[j] <- opponents[j]$strategy
     }
@@ -67,12 +102,13 @@ network.evaluation <- function(g, nodes){
 }
 ```
 
+Evaluate Network - Calculate Game Results
+========================================================
 
 ```{r}
 game.evaluation <- function(results, nodes, g){
   row.names(results) <- 1:nodes
   results <- cbind(results, V(g)$strategy)
-  
   sentence.list <- NULL
   
   for(i in 1:length(results[,1])){
@@ -93,14 +129,16 @@ game.evaluation <- function(results, nodes, g){
 }
 ```
 
+Evaluate Network - Calculate Game Results
+========================================================
 
-```{r}
+```{r, echo=F}
 r <- network.evaluation(g.1, nodes)
 r.list <- game.evaluation(r, nodes, g.1)
 ```
 
 
-```{r}
+```{r, echo=F}
 results.graph <- function(results.list, nodes, g){
   for(i in 1:nodes){
     V(g)[i]$result <- results.list[i]
@@ -109,17 +147,12 @@ results.graph <- function(results.list, nodes, g){
 }
 ```
 
-```{r}
+```{r, echo=F}
 g.results <- results.graph(r.list, nodes, g.1)
 
 results <- cbind(1:nodes, V(g.results)$result)
 colnames(results) <-c("Node", "Years Sentenced")
-kable(results)
-```
 
-
-
-```{r}
 V(g.results)[result == 0]$color <- '#00B2E5' 
 V(g.results)[result == 1]$color <- '#2696B7' 
 V(g.results)[result == 4]$color <- '#4C7B89' 
@@ -129,55 +162,16 @@ V(g.results)[result == 12]$color <- '#BF2A00'
 ```
 
 
-```{r}
+```{r, echo=F}
 plot(g.results)
 ```
 
+A More Realistic Network
+========================================================
 
-
-
-However, if you think of most human networks, they aren't going to be modeled by a ring where every person has two connections. Instead, they may resemble a Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks. 
-
-```{r}
-size = 20
-
-g <- barabasi.game(size)
-
+ Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks:
+```{r, echo=FALSE}
+g <- barabasi.game(20)
 V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
-
 plot(g)
 ```
-
-```{r}
-r <- network.evaluation(g, size)
-```
-
-```{r}
-game.evaluation.any <- function(results, nodes, g){
-  row.names(results) <- 1:nodes
-  results <- cbind(results, V(g)$strategy)
-  
-  sentence.list <- NULL
-  
-  for(i in 1:length(results[,1])){
-    if(results[i,1] == 1){ #row defects
-        opponent.sum <- sum(results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 6)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 12)}
-    }
-    else{
-        opponent.sum <- sum(results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 1)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 4)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 8)}
-    }
-  }
-  return(sentence.list)
-}
-```
-
-```{r}
-#r.list <- game.evaluation.any(r, size, g)
-```
-
