@@ -111,3 +111,10 @@ A More Realistic Network
 
  Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks:
 ![plot of chunk unnamed-chunk-16](IS609Presentation-figure/unnamed-chunk-16-1.png)
+
+Next Step (partially done)
+========================================================
+
+1) Give all 1st degree nodes a probability of defection.   
+2) If a 1st degree node defects, increase the probability of the next node defecting.   
+3) Finally, determine the probability of Node 1 - 'The Godfather' - being sentenced.  

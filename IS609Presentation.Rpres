@@ -175,3 +175,10 @@ g <- barabasi.game(20)
 V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
 plot(g)
 ```
+
+Next Step (partially done)
+========================================================
+
+1) Give all 1st degree nodes a probability of defection.   
+2) If a 1st degree node defects, increase the probability of the next node defecting.   
+3) Finally, determine the probability of Node 1 - 'The Godfather' - being sentenced.  

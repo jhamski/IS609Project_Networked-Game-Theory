@@ -7,6 +7,7 @@ output: html_document
 
 ```{r, message=FALSE, warning=FALSE}
 library(igraph)
+
 library(ggplot2)
 library(knitr)
 ```
@@ -140,17 +141,96 @@ However, if you think of most human networks, they aren't going to be modeled by
 
 ```{r}
 size = 20
-
-g <- barabasi.game(size)
+set.seed(456)
+g <- barabasi.game(size, power = 0.6, m = 1)
 
 V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
 
 plot(g)
 ```
 
+Find the 'Footsoldiers' - nodes with degree of one. 
 ```{r}
+one.degree <- function(g){
+  degree.list <- NULL
+  
+  for(i in V(g)){
+    if(degree(g = g, v = i) == 1){
+      degree.list <- c(degree.list, i)
+    }
+  }
+  return(degree.list)
+}
+```
+
+```{r}
+footsoldiers <- one.degree(g)
+```
+
+Give each Footsolier a small degree of defection. 
+```{r}
+for(i in 1:size){
+  if(V(g)[i] %in% footsoldiers){
+    V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.25, 0.75))
+  }
+  else{V(g)[i]$strategy <- NA}
+}
+
+for(i in 1:size){
+  if(is.na(V(g)$strategy[i]) == TRUE){
+    V(g)[i]$color <- 'black'
+  }
+  else{
+    if(V(g)$strategy[i] == 1){
+      V(g)[i]$color <- 'red'
+    }
+    if(V(g)$strategy[i] == 2){
+      V(g)[i]$color <- 'blue'
+    }
+  }
+}
+
+plot(g)
+```
+
+Take each Wiseguy the Footsoldiers either did or didn't rat on. If they did rat, there's a 50% chance the Wiseguy rats. If they didn't there's only a 5% chance the Wiseguy rats. 
+
+```{r}
+next.list <- NULL
+for(i in 1:nodes){
+  opponents <- neighbors(g, i, mode="all")
+  if(length(opponents$strategy[is.na(opponents$strategy) == TRUE]) == 
+     length(opponents$strategy)){next}
+  else{      
+    #get index for the next round of evaluation
+    next.list <- c(next.list, i)
+  }
+}
+```
+
+```{r}
+for(i in next.list){
+  opponents <- neighbors(g, i, mode="all")
+  print(i)
+  print(opponents$strategy)
+}
+```
+
+
+
+
+
+
+
+
+
+### Code Scrapyard
+
+```{r}
+#works
 r <- network.evaluation(g, size)
 ```
+
 
 ```{r}
 game.evaluation.any <- function(results, nodes, g){
@@ -176,8 +256,3 @@ game.evaluation.any <- function(results, nodes, g){
   return(sentence.list)
 }
 ```
-
-```{r}
-#r.list <- game.evaluation.any(r, size, g)
-```
-
