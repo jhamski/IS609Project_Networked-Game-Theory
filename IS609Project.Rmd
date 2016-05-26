@@ -5,14 +5,25 @@ date: "April 9, 2016"
 output: html_document
 ---
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 library(igraph)
-
 library(ggplot2)
 library(knitr)
 ```
 
-Iterated Prisoner's Dilemma on a Graph.
+# Introduction
+
+Game theory is applied in economics, political science, biology and a range of other discriplines to study how rational decision makers interact. The canonical example of game theory is the Prisoner's Dilemma. 
+
+Two things stick out when making the leap from a toy example like the Prisoner's Dilemma and a real-world example like a market:  
+* Most market participants don't play multiple games against the same opponent, they play only one or perhaps several over time.  
+* Most market participants don't play against just one opponent, they play against several.  
+
+These "n-person" games can utilize Graph Theory to allow for games to be played on networks that reflect realistic human relationships. 
+
+
+
+# Prisoner's Dilemma on a Graph.
 
 In the classic two person Prisoner's Dilemma . 
 
@@ -141,7 +152,7 @@ However, if you think of most human networks, they aren't going to be modeled by
 
 ```{r}
 size = 20
-set.seed(456)
+set.seed(2913)
 g <- barabasi.game(size, power = 0.6, m = 1)
 
 V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
@@ -171,7 +182,7 @@ Give each Footsolier a small degree of defection.
 ```{r}
 for(i in 1:size){
   if(V(g)[i] %in% footsoldiers){
-    V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.25, 0.75))
+    V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.4, 0.6))
   }
   else{V(g)[i]$strategy <- NA}
 }
@@ -215,11 +226,6 @@ for(i in next.list){
   print(opponents$strategy)
 }
 ```
-
-
-
-
-
 
 
 
