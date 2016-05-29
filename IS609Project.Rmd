@@ -9,11 +9,12 @@ output: html_document
 library(igraph)
 library(ggplot2)
 library(knitr)
+library(dplyr)
 ```
 
 # Introduction
 
-Game theory is applied in economics, political science, biology and a range of other discriplines to study how rational decision makers interact. The canonical example of game theory is the Prisoner's Dilemma. 
+Game theory is applied in economics, political science, biology and a range of other discriplines to study how rational decision makers interact. The canonical teaching example in game theory is the Prisoner's Dilemma (PD). 
 
 Two things stick out when making the leap from a toy example like the Prisoner's Dilemma and a real-world example like a market:  
 * Most market participants don't play multiple games against the same opponent, they play only one or perhaps several over time.  
@@ -25,10 +26,9 @@ These "n-person" games can utilize Graph Theory to allow for games to be played 
 
 # Prisoner's Dilemma on a Graph.
 
-In the classic two person Prisoner's Dilemma . 
-
-```{r}
-nodes <- 16
+The two player PD may be modeled as two nodes connected by a single edge. Extending to three players, we can model it as three nodes connected by three edges. Each node in this 
+```{r, warning=FALSE, error=FALSE}
+nodes <- 3
 degree <- 2
 g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
 
@@ -129,7 +129,7 @@ colnames(results) <-c("Node", "Years Sentenced")
 kable(results)
 ```
 
-
+Color coding each of the possible outcomes: 
 
 ```{r}
 V(g.results)[result == 0]$color <- '#00B2E5' 
@@ -138,24 +138,61 @@ V(g.results)[result == 4]$color <- '#4C7B89'
 V(g.results)[result == 6]$color <- '#72605B' 
 V(g.results)[result == 8]$color <- '#98452D' 
 V(g.results)[result == 12]$color <- '#BF2A00' 
-```
 
-
-```{r}
 plot(g.results)
 ```
 
+This 'Prisoner's Dilemma on a Graph' simulation may be extended to n players all of degree 2. 
+```{r}
+nodes <- 16
+degree <- 2
+g.2 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
 
+#randomply select strategy
+# 1 = defect, 2 = cooperate
+V(g.2)$strategy <- sample(c(1,2), size = length(V(g.2)), replace = T)
 
+V(g.2)[strategy == 1]$color <- 'red' # defect
+V(g.2)[strategy == 2]$color <- 'blue' # cooperate
+plot(g.2)
+```
 
-However, if you think of most human networks, they aren't going to be modeled by a ring where every person has two connections. Instead, they may resemble a Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks. 
+```{r}
+r.2 <- network.evaluation(g.2, nodes)
+r.2.list <- game.evaluation(r.2, nodes, g.2)
+
+g.2.results <- results.graph(r.2.list, nodes, g.2)
+
+results.2 <- cbind(1:nodes, V(g.2.results)$result)
+colnames(results.2) <-c("Node", "Years Sentenced")
+kable(results.2)
+```
+
+```{r}
+V(g.2.results)[result == 0]$color <- '#00B2E5' 
+V(g.2.results)[result == 1]$color <- '#2696B7' 
+V(g.2.results)[result == 4]$color <- '#4C7B89' 
+V(g.2.results)[result == 6]$color <- '#72605B' 
+V(g.2.results)[result == 8]$color <- '#98452D' 
+V(g.2.results)[result == 12]$color <- '#BF2A00' 
+
+plot(g.2.results)
+```
+
+# Game Theory on Complex Networks
+
+Most human networks are not well modeled by a ring where every person has two connections. Instead, they may resemble a Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks. 
+
+The following network diffusion model follows these steps:  
+1) All 1st degree nodes ("Footsoldiers") are given some probability of defection. 
+2) Each greater than 1 degree node ("Wiseguys") is given a probability that depends on whether their Footsoldiers defected or not. This step is created until all except the central node ("Godfather") is either defected upon or the Wiseguys connected to him stay loyal. 
 
 ```{r}
 size = 20
 set.seed(2913)
 g <- barabasi.game(size, power = 0.6, m = 1)
 
-V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
+#V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
 
 plot(g)
 ```
@@ -180,52 +217,103 @@ footsoldiers <- one.degree(g)
 
 Give each Footsolier a small degree of defection. 
 ```{r}
-for(i in 1:size){
-  if(V(g)[i] %in% footsoldiers){
-    V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.4, 0.6))
-  }
-  else{V(g)[i]$strategy <- NA}
-}
-
-for(i in 1:size){
-  if(is.na(V(g)$strategy[i]) == TRUE){
-    V(g)[i]$color <- 'black'
-  }
-  else{
-    if(V(g)$strategy[i] == 1){
-      V(g)[i]$color <- 'red'
+decide.defection <- function(g, size, footsoldiers){
+  for(i in 1:size){
+    if(V(g)[i] %in% footsoldiers){
+      V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.4, 0.6))
     }
-    if(V(g)$strategy[i] == 2){
-      V(g)[i]$color <- 'blue'
+    else{V(g)[i]$strategy <- NA}
+  }
+  
+  for(i in 1:size){
+    if(is.na(V(g)$strategy[i]) == TRUE){
+      V(g)[i]$color <- 'black'
+    }
+    else{
+      if(V(g)$strategy[i] == 1){
+        V(g)[i]$color <- 'red'
+      }
+      if(V(g)$strategy[i] == 2){
+        V(g)[i]$color <- 'blue'
+      }
     }
   }
+  return(g)
 }
+```
 
+```{r}
+g <- decide.defection(g, size, footsoldiers)
 plot(g)
 ```
 
 Take each Wiseguy the Footsoldiers either did or didn't rat on. If they did rat, there's a 50% chance the Wiseguy rats. If they didn't there's only a 5% chance the Wiseguy rats. 
 
 ```{r}
-next.list <- NULL
-for(i in 1:nodes){
-  opponents <- neighbors(g, i, mode="all")
-  if(length(opponents$strategy[is.na(opponents$strategy) == TRUE]) == 
-     length(opponents$strategy)){next}
-  else{      
-    #get index for the next round of evaluation
-    next.list <- c(next.list, i)
+get.next.list <- function(g, size){
+  next.list <- NULL
+  for(i in 1:size){
+    opponents <- neighbors(g, i, mode="all")
+    if(length(opponents$strategy[is.na(opponents$strategy) == TRUE]) == 
+       length(opponents$strategy)){next}
+    else{      
+      #get index for the next round of evaluation
+      next.list <- c(next.list, i)
+    }
   }
+  return(next.list)
 }
 ```
 
 ```{r}
-for(i in next.list){
-  opponents <- neighbors(g, i, mode="all")
-  print(i)
-  print(opponents$strategy)
+next.list <- get.next.list(g, size)
+```
+
+
+```{r}
+decide.remaining.players <- function(g, next.list){
+  for(i in next.list){
+    opponents <- neighbors(g, i, mode="all")
+    
+    results <- count(opponents$strategy)
+    defectors <- results$freq[results$x == 1][1]
+    loyals <- results$freq[results$x == 2][1]
+    
+    if(is.na(defectors) == TRUE){defectors = 0}
+    if(is.na(loyals) == TRUE){loyals = 0}
+  
+    
+    if(defectors >= loyals){
+      V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.5, 0.5))
+      V(g)[i]$color <- "red"
+    }
+    else{
+      V(g)[i]$strategy <- sample(c(1,2), size = 1, prob = c(0.9, 0.1))
+      V(g)[i]$color <- "blue"
+      }
+  }
+  return(g)
 }
 ```
+
+```{r}
+g <- decide.remaining.players(g, next.list)
+plot(g)
+```
+
+
+```{r}
+size = 40
+tree <- make_tree(n = size, children = 3,  mode = "undirected")
+footsoldiers <- one.degree(tree)
+tree <- decide.defection(tree, size, footsoldiers)
+next.list <- get.next.list(tree, size)
+tree <- decide.remaining.players(tree, next.list)
+plot(tree)
+```
+
+
+
 
 
 
