@@ -10,24 +10,35 @@ library(igraph)
 library(ggplot2)
 library(knitr)
 library(dplyr)
+library(plyr)
 ```
 
 # Introduction
 
-Game theory is applied in economics, political science, biology and a range of other discriplines to study how rational decision makers interact. The canonical teaching example in game theory is the Prisoner's Dilemma (PD). 
+Game theory is applied in economics, political science, biology and a range of other discriplines to study how rational decision makers interact. The canonical teaching example in game theory is the Prisoner's Dilemma (PD). In this game, two players are separated and cannot communicate. They are told that if they give up the other player (defect) they will get a reduced sentence, but if they don't give up the other player (cooperate) they may serve even less time. However, if they cooperate and the other player defects, they will go to jail for an even greater amount of time than if they would have defected. This scenario is often extended to multiple games (iterated Prisoner's Dilemma).   
 
 Two things stick out when making the leap from a toy example like the Prisoner's Dilemma and a real-world example like a market:  
-* Most market participants don't play multiple games against the same opponent, they play only one or perhaps several over time.  
-* Most market participants don't play against just one opponent, they play against several.  
+(A) Most market participants don't play multiple games against the same opponent, they play only one or perhaps several over time.  
+(B) Most market participants don't play against just one opponent, they play against several.  
 
-These "n-person" games can utilize Graph Theory to allow for games to be played on networks that reflect realistic human relationships. 
-
+These "n-person" games can utilize Graph Theory to allow for games to be played on networks that reflect realistic human relationships. This project has two sections. First, I developed functions to play the Prisoner's Dilemma on any graph where the nodes have two degrees. Second, I developed an game that can be played on any graph, where low-degree players can defect, influencing their neighboring nodes to be more likely to defect.  
 
 
 # Prisoner's Dilemma on a Graph.
 
-The two player PD may be modeled as two nodes connected by a single edge. Extending to three players, we can model it as three nodes connected by three edges. Each node in this 
+The two player PD may be modeled as two nodes connected by a single edge. Extending to three players, we can model it as three nodes connected by three edges. Each node in this arrangement has a degree of two. In this Prisoner's Dilemma on a Graph demonstration, the penalties depending on player actions are:  
+Player Defects {   
+1) All opponents defect -> 8 years (equilibrium)  
+2) One opponent defects, one cooperates -> 4  
+3) All opponents cooperate -> 0   
+Player Cooperates {    
+4) All opponents defect -> 12  
+5) One opponend defects, one cooperates -> 6  
+6) All opponents cooperate -> 1   
+
+First, a graph is created and each node is randomly given a 'strategy' parameter with a value of 1 for defect and 2 for cooperate. 
 ```{r, warning=FALSE, error=FALSE}
+set.seed(945)
 nodes <- 3
 degree <- 2
 g.1 <- degree.sequence.game(rep(degree, nodes), method =  "vl")
@@ -44,7 +55,7 @@ V(g.1)[strategy == 2]$color <- 'blue' # cooperate
 plot(g.1)
 ```
 
-
+In order to generalize the evaluation function to other graphs, there is a function to calculate the maximum degree in the graph. In the future, this should be re-factored to store the value for the graph instead of calculating it each time the network evaluation function runs. 
 ```{r}
 max.degree <- function(g){
   
@@ -58,7 +69,7 @@ max.degree <- function(g){
 }
 ```
 
-
+Network evaluation function: returns a dataframe with each row representing the strategy of the opposing players for a given node. 
 ```{r}
 network.evaluation <- function(g, nodes){
   network.results <- NULL
@@ -79,7 +90,7 @@ network.evaluation <- function(g, nodes){
 }
 ```
 
-
+Game evaluation: here the resulting 'sentence' in years (game outcome) is calculated for each node using the player's strategy and the strategies of connected nodes. 
 ```{r}
 game.evaluation <- function(results, nodes, g){
   row.names(results) <- 1:nodes
@@ -111,7 +122,7 @@ r <- network.evaluation(g.1, nodes)
 r.list <- game.evaluation(r, nodes, g.1)
 ```
 
-
+Results graph: the results are moved from list form back onto the graph. 
 ```{r}
 results.graph <- function(results.list, nodes, g){
   for(i in 1:nodes){
@@ -142,7 +153,7 @@ V(g.results)[result == 12]$color <- '#BF2A00'
 plot(g.results)
 ```
 
-This 'Prisoner's Dilemma on a Graph' simulation may be extended to n players all of degree 2. 
+This 'Prisoner's Dilemma on a Graph' simulation may be extended to n players all of degree 2, creating a ring graph. 
 ```{r}
 nodes <- 16
 degree <- 2
@@ -181,9 +192,9 @@ plot(g.2.results)
 
 # Game Theory on Complex Networks
 
-Most human networks are not well modeled by a ring where every person has two connections. Instead, they may resemble a Barabási–Albert model - a random, scale-free newtwork that commonly arises in human networks. 
+Most human networks are not well modeled by a ring where every person has two connections. Instead, they may resemble a Barabási–Albert model - a random, scale-free graph that commonly arises in human networks. Here, I use the example of a crime syndicate to explore how games can be played on a graph. 
 
-The following network diffusion model follows these steps:  
+The model here is applying game theory to a network diffusion model that follows these steps:  
 1) All 1st degree nodes ("Footsoldiers") are given some probability of defection. 
 2) Each greater than 1 degree node ("Wiseguys") is given a probability that depends on whether their Footsoldiers defected or not. This step is created until all except the central node ("Godfather") is either defected upon or the Wiseguys connected to him stay loyal. 
 
@@ -192,12 +203,10 @@ size = 20
 set.seed(2913)
 g <- barabasi.game(size, power = 0.6, m = 1)
 
-#V(g)$strategy <- sample(c(1,2), size = length(V(g)), replace = T)
-
 plot(g)
 ```
 
-Find the 'Footsoldiers' - nodes with degree of one. 
+one.degree: finds the 'Footsoldiers' - nodes with degree of one. If there are no one-degree nodes, 40% of the network is randomly assigned as a starting point. 
 ```{r}
 one.degree <- function(g){
   degree.list <- NULL
@@ -207,6 +216,11 @@ one.degree <- function(g){
       degree.list <- c(degree.list, i)
     }
   }
+  
+  if(length(degree.list) == 0){
+    num.samples <- round(length(V(g))*0.4, 0)
+    degree.list <-sample(V(g), size = num.samples)}
+  
   return(degree.list)
 }
 ```
@@ -215,7 +229,7 @@ one.degree <- function(g){
 footsoldiers <- one.degree(g)
 ```
 
-Give each Footsolier a small degree of defection. 
+decide.defection: randomly give 40% of Footsoldiers the defect strategy. 
 ```{r}
 decide.defection <- function(g, size, footsoldiers){
   for(i in 1:size){
@@ -242,13 +256,13 @@ decide.defection <- function(g, size, footsoldiers){
 }
 ```
 
+At this point, only Footsoldiers have played the game. 
 ```{r}
 g <- decide.defection(g, size, footsoldiers)
 plot(g)
 ```
 
-Take each Wiseguy the Footsoldiers either did or didn't rat on. If they did rat, there's a 50% chance the Wiseguy rats. If they didn't there's only a 5% chance the Wiseguy rats. 
-
+get.next.list: obtains a list of nodes which do not have a strategy yet. 
 ```{r}
 get.next.list <- function(g, size){
   next.list <- NULL
@@ -269,13 +283,14 @@ get.next.list <- function(g, size){
 next.list <- get.next.list(g, size)
 ```
 
-
+Now, the players who are connected to a Footsoldier (the "Wiseguys") are given a defect or cooperate strategy. If they are connected to someone who has defected, they will defect 50% of the time. If they are connected to someone who stayed loyal, they will defect only 10% of the time. 
 ```{r}
 decide.remaining.players <- function(g, next.list){
   for(i in next.list){
     opponents <- neighbors(g, i, mode="all")
     
-    results <- count(opponents$strategy)
+    results <- plyr::count(opponents$strategy)
+    
     defectors <- results$freq[results$x == 1][1]
     loyals <- results$freq[results$x == 2][1]
     
@@ -296,57 +311,48 @@ decide.remaining.players <- function(g, next.list){
 }
 ```
 
+On this relatively small graph it only takes one round to decide the strategy of all players. The central node (#1) is the Godfather. In this case, two of three of the Godfather's connections defected. The Godfather stayed loyal. 
 ```{r}
 g <- decide.remaining.players(g, next.list)
 plot(g)
 ```
 
+In this scenario, I use the above game on a larger network. It is necissary to play the game multiple times in order for each level to play. 
+```{r, warning=FALSE, eval=FALSE}
+size = 60
+tree <- make_tree(n = size, children = 2,  mode = "undirected")
 
-```{r}
-size = 40
-tree <- make_tree(n = size, children = 3,  mode = "undirected")
 footsoldiers <- one.degree(tree)
 tree <- decide.defection(tree, size, footsoldiers)
+
 next.list <- get.next.list(tree, size)
 tree <- decide.remaining.players(tree, next.list)
+
+while(is.na(V(tree)$strategy[1]) == TRUE){
+  next.list <- get.next.list(tree, size)
+  tree <- decide.remaining.players(tree, next.list)
+}
+
 plot(tree)
 ```
 
 
 
+For a random graph: 
+```{r, warning=FALSE, eval=FALSE}
+size = 40
+random <- erdos.renyi.game(n = size, 0.25)
 
+footsoldiers <- one.degree(random)
+random <- decide.defection(random, size, footsoldiers)
 
-
-
-### Code Scrapyard
-
-```{r}
-#works
-r <- network.evaluation(g, size)
-```
-
-
-```{r}
-game.evaluation.any <- function(results, nodes, g){
-  row.names(results) <- 1:nodes
-  results <- cbind(results, V(g)$strategy)
-  
-  sentence.list <- NULL
-  
-  for(i in 1:length(results[,1])){
-    if(results[i,1] == 1){ #row defects
-        opponent.sum <- sum(results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 0)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 6)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 12)}
-    }
-    else{
-        opponent.sum <- sum(results[i,-1])
-        if(opponent.sum == 2){sentence.list = c(sentence.list, 1)}
-        if(opponent.sum == 3){sentence.list = c(sentence.list, 4)}
-        if(opponent.sum == 4){sentence.list = c(sentence.list, 8)}
-    }
-  }
-  return(sentence.list)
+while(is.na(V(random)$strategy[1]) == TRUE){
+  next.list <- get.next.list(random, size)
+  random <- decide.remaining.players(random, next.list)
 }
+
+plot(random)
 ```
+
+
+
