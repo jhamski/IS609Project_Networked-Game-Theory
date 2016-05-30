@@ -2,7 +2,7 @@
 title: "IS609 - Networked Game Theory - Final Project"
 author: "J. Hamski, S. Hong, H. Berk"
 date: "April 9, 2016"
-output: html_document
+output: pdf_document
 ---
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
@@ -11,6 +11,7 @@ library(ggplot2)
 library(knitr)
 library(dplyr)
 library(plyr)
+library(tidyr)
 ```
 
 # Introduction
@@ -206,7 +207,7 @@ g <- barabasi.game(size, power = 0.6, m = 1)
 plot(g)
 ```
 
-one.degree: finds the 'Footsoldiers' - nodes with degree of one. If there are no one-degree nodes, 40% of the network is randomly assigned as a starting point. 
+one.degree: finds the 'Footsoldiers' - nodes with degree of one. If there are no one-degree nodes, 25% of the network is randomly assigned as a starting point. 
 ```{r}
 one.degree <- function(g){
   degree.list <- NULL
@@ -218,7 +219,7 @@ one.degree <- function(g){
   }
   
   if(length(degree.list) == 0){
-    num.samples <- round(length(V(g))*0.4, 0)
+    num.samples <- round(length(V(g))*0.25, 0)
     degree.list <-sample(V(g), size = num.samples)}
   
   return(degree.list)
@@ -317,8 +318,14 @@ g <- decide.remaining.players(g, next.list)
 plot(g)
 ```
 
+```{r}
+length(V(g)[strategy == 1]) / length(V(g))
+```
+55% of the players defected. 
+
+### Tree Graph
 In this scenario, I use the above game on a larger network. It is necissary to play the game multiple times in order for each level to play. 
-```{r, warning=FALSE, eval=FALSE}
+```{r, warning=FALSE}
 size = 60
 tree <- make_tree(n = size, children = 2,  mode = "undirected")
 
@@ -333,13 +340,17 @@ while(is.na(V(tree)$strategy[1]) == TRUE){
   tree <- decide.remaining.players(tree, next.list)
 }
 
+```
+
+```{r}
 plot(tree)
 ```
 
+In this tree network, 65% of the players defected.
 
-
+### Random Graph
 For a random graph: 
-```{r, warning=FALSE, eval=FALSE}
+```{r, warning=FALSE}
 size = 40
 random <- erdos.renyi.game(n = size, 0.25)
 
@@ -351,8 +362,76 @@ while(is.na(V(random)$strategy[1]) == TRUE){
   random <- decide.remaining.players(random, next.list)
 }
 
+```
+
+```{r}
 plot(random)
 ```
 
 
+In this highly connected graph, 65% of the players defected. 
 
+# Does connectivity change game results?
+
+Here, we will run a game on two different graphs multiple times. The percentage of defectors will be calculated and returned. 
+
+```{r}
+size = 20
+more.connected <- barabasi.game(size, power = 0.5, m = 2, directed = FALSE)
+plot(more.connected)
+```
+
+```{r}
+size = 20
+less.connected <- barabasi.game(size, power = 0.15, m = 1, directed = FALSE)
+plot(less.connected)
+```
+
+```{r}
+iterate.game <- function(graph){
+  footsoldiers <- one.degree(graph)
+  graph <- decide.defection(graph, size, footsoldiers)
+  
+  while(is.na(V(graph)$strategy[1]) == TRUE){
+    next.list <- get.next.list(graph, size)
+    graph <- decide.remaining.players(graph, next.list)
+  }
+  
+  defect.proportion.iter <- length(which(V(graph)$strategy == 1)) /
+    length(V(graph))
+  
+  return(defect.proportion.iter)
+}
+```
+
+```{r}
+iters <- 500
+```
+
+
+```{r}
+more.connected.percent.defectors <- replicate(iters, iterate.game(more.connected))
+summary(more.connected.percent.defectors)
+```
+
+
+```{r}
+less.connected.percent.defectors <- replicate(iters, iterate.game(less.connected))
+summary(less.connected.percent.defectors)
+```
+
+```{r}
+iteration.results <- cbind(more.connected.percent.defectors, less.connected.percent.defectors) 
+iteration.results <- as.data.frame(iteration.results)
+colnames(iteration.results) <- c("More Connected", "Less Connected")
+
+iteration.results <- gather(iteration.results, "Graph", "Defections", 1:2)
+```
+
+```{r}
+ggplot(iteration.results, aes(Graph, Defections)) + 
+  geom_boxplot(stat = "boxplot") +
+  ylab("Defection Rate")
+```
+
+The more connected graph shows a lower average and higher variation in defection rate.  
